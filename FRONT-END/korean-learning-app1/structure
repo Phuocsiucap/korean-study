@@ -1,0 +1,49 @@
+korean-learning-app/
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+├── src/
+│   ├── components/          # UI Components tái sử dụng
+│   │   ├── common/
+│   │   │   ├── Header.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── LoadingSpinner.jsx
+│   │   │   └── ProgressBar.jsx
+│   │   ├── cards/
+│   │   │   ├── FlashCard.jsx
+│   │   │   ├── ListeningCard.jsx
+│   │   │   └── WritingCard.jsx
+│   │   └── navigation/
+│   │       ├── CategoryCard.jsx
+│   │       ├── LessonCard.jsx
+│   │       └── ModeSelector.jsx
+│   ├── pages/               # Các trang chính
+│   │   ├── HomePage.jsx
+│   │   ├── CategoryPage.jsx
+│   │   ├── LessonPage.jsx
+│   │   ├── FlashcardMode.jsx
+│   │   ├── ListenChoiceMode.jsx
+│   │   ├── ListenWriteMode.jsx
+│   │   └── ListenAudioMode.jsx
+│   ├── hooks/               # Custom hooks
+│   │   ├── useAudio.js
+│   │   ├── useProgress.js
+│   │   └── useLocalStorage.js
+│   ├── context/             # State Management
+│   │   ├── AppContext.js
+│   │   └── ProgressContext.js
+│   ├── data/               # Dữ liệu từ vựng
+│   │   ├── vocabulary.js
+│   │   └── categories.js
+│   ├── utils/              # Helper functions
+│   │   ├── audioUtils.js
+│   │   ├── shuffleArray.js
+│   │   └── scoreCalculator.js
+│   ├── styles/             # Styling
+│   │   ├── globals.css
+│   │   ├── components.css
+│   │   └── pages.css
+│   ├── App.jsx             # Main App component
+│   └── index.js            # Entry point
+├── package.json
+└── README.md

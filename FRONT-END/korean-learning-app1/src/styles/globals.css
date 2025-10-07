@@ -1,0 +1,82 @@
+/* Global styles cho toàn bộ app */
+
+/* Layout utilities */
+.container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.section-padding {
+  @apply py-8 px-4 sm:px-6 lg:px-8;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white rounded-xl shadow-lg p-6;
+}
+
+.card-hover {
+  @apply hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-300;
+}
+
+.btn-success {
+  @apply bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300;
+}
+
+.btn-danger {
+  @apply bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition-all duration-300;
+}
+
+/* Text styles */
+.text-gradient {
+  @apply bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent;
+}
+
+.heading-1 {
+  @apply text-4xl lg:text-5xl font-bold text-gray-800;
+}
+
+.heading-2 {
+  @apply text-2xl lg:text-3xl font-bold text-gray-800;
+}
+
+.heading-3 {
+  @apply text-xl lg:text-2xl font-bold text-gray-800;
+}
+
+/* Korean text specific */
+.korean-text {
+  font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  font-weight: 500;
+}
+
+.korean-large {
+  @apply korean-text text-4xl lg:text-6xl font-bold;
+}
+
+/* Loading states */
+.skeleton {
+  @apply animate-pulse bg-gray-300 rounded;
+}
+
+/* Responsive utilities */
+.mobile-only {
+  @apply block md:hidden;
+}
+
+.desktop-only {
+  @apply hidden md:block;
+}
+
+/* Focus states */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2;
+}
