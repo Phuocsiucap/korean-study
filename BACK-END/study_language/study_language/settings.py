@@ -149,21 +149,18 @@ if DEBUG:
         "http://127.0.0.1:3000",
     ]
 else:
-    # === PRODUCTION (HTTPS) ===
     CSRF_COOKIE_SAMESITE = "None"
     CSRF_COOKIE_SECURE = True
-    
+
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SECURE = True
-    
+
     CORS_ALLOWED_ORIGINS = [
-        "https://yourdomain.com",
-        "https://www.yourdomain.com",
+        "https://korean-study-phuoc.onrender.com",
     ]
-    
+
     CSRF_TRUSTED_ORIGINS = [
-        "https://yourdomain.com",
-        "https://www.yourdomain.com",
+        "https://korean-study-phuoc.onrender.com",
     ]
 
 
