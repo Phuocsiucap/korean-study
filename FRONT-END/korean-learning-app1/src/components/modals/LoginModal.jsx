@@ -40,7 +40,7 @@ const LoginModal = ({ onClose, onSwitchToRegister }) => {
     return newErrors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -49,7 +49,7 @@ const LoginModal = ({ onClose, onSwitchToRegister }) => {
 
     // Gọi hàm Login từ AuthContext
     try {
-      const data = Login({
+      const data = await Login({
         username: formData.username,
         password: formData.password,
       });

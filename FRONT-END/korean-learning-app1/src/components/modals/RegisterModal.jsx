@@ -83,13 +83,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
     try {
       const response = await sendOtp({ email: formData.email });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setErrors({ ...errors, email: data.error || 'Không thể gửi mã xác nhận' });
-        setIsSendingCode(false);
-        return;
-      }
+    
       
       setIsCodeSent(true);
       setCountdown(60);
