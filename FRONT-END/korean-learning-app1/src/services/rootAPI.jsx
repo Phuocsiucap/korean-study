@@ -1,8 +1,9 @@
 import axios from 'axios';
 import Cookies from "js-cookie";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+// const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+const API_BASE_URL ="https://korean-study-yo4g.onrender.com/api"
 export const apiCall = async (method, endpoint, data = null, config = {}) => {
   try {
     // Lấy CSRF token tại thời điểm gọi request (luôn mới nhất)
