@@ -83,8 +83,6 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
     try {
       const response = await sendOtp({ email: formData.email });
 
-    
-      
       setIsCodeSent(true);
       setCountdown(60);
       setErrors({ ...errors, email: '' });

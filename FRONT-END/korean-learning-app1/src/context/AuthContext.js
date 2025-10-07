@@ -83,6 +83,7 @@ export const AuthProvider = ({ children }) => {
 
   const sendOtp = async (email) => {
     const rep = await send_otp(email);
+    console.log("log of send otp",rep);
     return rep;
   }
   
