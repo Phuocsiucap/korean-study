@@ -12,8 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
+from urllib.parse import urlparse, parse_qsl
 # Load biến môi trường từ file .env
 load_dotenv()
 
@@ -78,15 +79,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'study_language.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 
 # Password validation
@@ -138,7 +130,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 
 
-DEBUG = True  
+DEBUG = os.getenv("DEBUG", "False").lower() == "true" 
 if DEBUG:
     # === DEVELOPMENT (HTTP) ===
     CSRF_COOKIE_SAMESITE = "Lax"
@@ -197,7 +189,7 @@ REST_FRAMEWORK = {
 
 
 SECRET_KEY = os.getenv("SECRET_KEY", "insecure-key")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
 
 # Email configuration
 EMAIL_HOST = os.getenv("EMAIL_HOST")
@@ -206,3 +198,20 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+
+
+
+# Replace the DATABASES section of your settings.py with this
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': tmpPostgres.path.replace('/', ''),
+        'USER': tmpPostgres.username,
+        'PASSWORD': tmpPostgres.password,
+        'HOST': tmpPostgres.hostname,
+        'PORT': 5432,
+        'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
+    }
+}
