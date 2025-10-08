@@ -126,7 +126,6 @@ APPEND_SLASH = False
 AUTH_USER_MODEL = "users.CustomUser"
 
 CORS_ALLOW_CREDENTIALS = True
-# CORS_ALLOW_ALL_ORIGINS = False
 
 
 

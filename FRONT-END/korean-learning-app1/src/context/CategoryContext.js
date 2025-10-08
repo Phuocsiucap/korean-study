@@ -29,7 +29,7 @@ export const CategoryProvider = ({children}) => {
             }
         }
         fetchCategories();
-    }, [isAuthenticated]);// chay 1 lan khi component mount
+    }, [isAuthenticated]);
     
     const addCategory = async (newCategory) => {
         try {

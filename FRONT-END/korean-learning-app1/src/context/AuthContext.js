@@ -22,15 +22,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading ]  = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    const fetchToken = async () => {
-      const req = await getCsrfToken();
-      if(req.status===200) {
+ 
+  const fetchToken = async () => {
+    const req = await getCsrfToken();
+    if(req.status===200) {
+      Cookies.set("csrf_token_fe", req.data.csrfToken);
 
-      }
     }
-    fetchToken();
-  },[])
+  };
+ 
 
   useEffect(() => {
     setLoading(true);
@@ -40,12 +40,13 @@ export const AuthProvider = ({ children }) => {
           if(rep.status === 200) {
             setUser(rep.data);
             setIsAuthenticated(true);
-            setLoading(false);
+            fetchToken();
           }
         } catch(error) {
           console.error(error);
+        } finally {
+          setLoading(false);
         }
-      
     }
     fetchUser();
   },[])
@@ -55,6 +56,7 @@ export const AuthProvider = ({ children }) => {
     if(rep.status === 200) {
       setUser(rep.data.user);
       setIsAuthenticated(true);
+      fetchToken();
     }
     return rep;
   };

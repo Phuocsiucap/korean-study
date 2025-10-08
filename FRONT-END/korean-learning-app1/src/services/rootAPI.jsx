@@ -9,7 +9,8 @@ console.log("DEBUG:", DEBUG);
 
 export const apiCall1 = async (method, endpoint, data = null, config = {}) => {
   try {
-    const csrfToken = Cookies.get("csrftoken");
+    const csrfToken = Cookies.get("csrf_token_fe");
+;
     console.log("csrftoken:", csrfToken);
     
     const response = await axios({
@@ -42,7 +43,7 @@ export const apiCall2 = async (method, endpoint, data = null, config = {}) => {
       ...config,
     });
     console.log(response.data);
-    return response.data;
+    return response;
   } catch (error) {
     console.error(
       `API error [${method.toUpperCase()} ${endpoint}]:`,
@@ -53,4 +54,4 @@ export const apiCall2 = async (method, endpoint, data = null, config = {}) => {
 };
 
 // ⚡ Chọn hàm dựa vào DEBUG
-export const apiCall = DEBUG ? apiCall1 : apiCall2;
+export const apiCall = DEBUG ? apiCall1 : apiCall1;
