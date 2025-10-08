@@ -1,7 +1,9 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
-import { login, logout, register, getMe, send_otp} from "../services/auth"
-const AuthContext = createContext();
+import { login, logout, register, getMe, send_otp, getCsrfToken} from "../services/auth"
+import Cookies from "js-cookie";
 
+const AuthContext = createContext();
+const sessionid = Cookies.get("sessionid");
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -19,25 +21,33 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading ]  = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    const fetchToken = async () => {
+      await getCsrfToken();
+    }
+    fetchToken();
+  },[])
 
   useEffect(() => {
     setLoading(true);
     const fetchUser = async () =>{
-      try {
-        const rep = await getMe();
-        if(rep.status === 200) {
-          setUser(rep.data);
-          setIsAuthenticated(true);
-          setLoading(false);
+      if(!sessionid){
+        try {
+          const rep = await getMe();
+          if(rep.status === 200) {
+            setUser(rep.data);
+            setIsAuthenticated(true);
+            setLoading(false);
+          }
+        } catch(error) {
+          console.error(error);
         }
-      } catch(error) {
-        console.error(error);
       }
-      
     }
     fetchUser();
-    
   },[])
+
   const Login = async (userData) => {
     const rep = await login(userData);
     if(rep.status === 200) {

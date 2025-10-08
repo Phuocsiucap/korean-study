@@ -1,5 +1,7 @@
 import { apiCall,apiCall2 } from "./rootAPI"
 
+export const getCsrfToken = async () => apiCall2('get', '/csrf/');
+
 export const login = async (username_password) => apiCall2('post', '/users/login/',username_password);
 export const register = async (email_username_password) => apiCall2('post', '/users/register/',email_username_password);
 export const getMe = async () => apiCall2('get', '/users/me/');

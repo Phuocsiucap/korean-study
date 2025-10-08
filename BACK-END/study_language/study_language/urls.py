@@ -18,8 +18,18 @@ from django.contrib import admin
 from django.urls import path, include
 from category.urls import urlpatterns as category_urls
 from users.urls import urlpatterns as users_urls
+
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
+
+@ensure_csrf_cookie
+def csrf_view(request):
+    return JsonResponse({"csrfToken": get_token(request)})
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("api/csrf/", csrf_view),
     path("api/", include(category_urls)),
     path('api/users/', include(users_urls)),
 ]
