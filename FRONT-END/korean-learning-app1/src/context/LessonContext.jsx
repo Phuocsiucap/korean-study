@@ -37,7 +37,7 @@ export const LessonProvider = ({ children }) => {
     const addLesson = async (categoryId, newLesson) => {
         try {
             const response = await createLesson(categoryId, newLesson);
-            if(response.status ===200) {
+            if(response.status ===201) {
                 setLessonsMap(prevMap => ({
                     ...prevMap,
                     [categoryId]: [...(prevMap[categoryId] || []), response.data]
@@ -69,7 +69,7 @@ export const LessonProvider = ({ children }) => {
     const removeLesson = async (categoryId, lessonId) => {
         try {
             const response = await deleteLesson(categoryId, lessonId);
-            if(response.status === 200) {
+            if(response.status === 204) {
                 setLessonsMap(prevMap => ({
                     ...prevMap,
                     [categoryId]: prevMap[categoryId].filter(lesson => lesson.id !== lessonId)

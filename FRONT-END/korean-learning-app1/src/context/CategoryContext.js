@@ -34,7 +34,7 @@ export const CategoryProvider = ({children}) => {
     const addCategory = async (newCategory) => {
         try {
             const data = await createCategory(newCategory);
-            if(data.status===200) {
+            if(data.status===201) {
                 setCategories((prevCategories) => [...prevCategories, data.data]);
                 console.log("Categories after added:",categories);
             }
