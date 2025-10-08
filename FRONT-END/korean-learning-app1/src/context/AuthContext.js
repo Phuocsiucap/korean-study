@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     setLoading(true);
     const fetchUser = async () =>{
-      if(!sessionid){
+      if(sessionid){
         try {
           const rep = await getMe();
           if(rep.status === 200) {
