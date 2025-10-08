@@ -9,7 +9,9 @@ console.log("🔍 API Base URL:", API_BASE_URL);
 export const apiCall = async (method, endpoint, data = null, config = {}) => {
   try {
     const csrfToken = Cookies.get("csrftoken");
+    const sessionid = Cookies.get("sessionid");
     console.log("csrftoken: ",csrfToken);
+    console.log("sessionid: ",sessionid);
     const response = await axios({
       method,
       url: `${API_BASE_URL}${endpoint}`,
