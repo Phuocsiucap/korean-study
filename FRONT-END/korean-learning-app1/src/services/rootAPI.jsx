@@ -2,16 +2,16 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
+const DEBUG = process.env.REACT_APP_DEBUG === "true";  // nhớ dùng REACT_APP_DEBUG trong .env
+
 console.log("🔍 API Base URL:", API_BASE_URL);
+console.log("DEBUG:", DEBUG);
 
-// const API_BASE_URL = "https://korean-study-yo4g.onrender.com/api";
-
-export const apiCall = async (method, endpoint, data = null, config = {}) => {
+export const apiCall1 = async (method, endpoint, data = null, config = {}) => {
   try {
     const csrfToken = Cookies.get("csrftoken");
-    const sessionid = Cookies.get("sessionid");
-    console.log("csrftoken: ",csrfToken);
-    console.log("sessionid: ",sessionid);
+    console.log("csrftoken:", csrfToken);
+    
     const response = await axios({
       method,
       url: `${API_BASE_URL}${endpoint}`,
@@ -25,7 +25,7 @@ export const apiCall = async (method, endpoint, data = null, config = {}) => {
       ...config,
     });
 
-    return response.data;
+    return response;
   } catch (error) {
     console.error(`API error [${method.toUpperCase()} ${endpoint}]:`, error);
     throw error;
@@ -42,7 +42,7 @@ export const apiCall2 = async (method, endpoint, data = null, config = {}) => {
       ...config,
     });
     console.log(response.data);
-    return response;
+    return response.data;
   } catch (error) {
     console.error(
       `API error [${method.toUpperCase()} ${endpoint}]:`,
@@ -51,3 +51,6 @@ export const apiCall2 = async (method, endpoint, data = null, config = {}) => {
     throw error;
   }
 };
+
+// ⚡ Chọn hàm dựa vào DEBUG
+export const apiCall = DEBUG ? apiCall1 : apiCall2;

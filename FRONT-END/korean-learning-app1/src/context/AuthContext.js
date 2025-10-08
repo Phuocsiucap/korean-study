@@ -3,7 +3,7 @@ import { login, logout, register, getMe, send_otp, getCsrfToken} from "../servic
 import Cookies from "js-cookie";
 
 const AuthContext = createContext();
-const sessionid = Cookies.get("sessionid");
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -24,7 +24,10 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchToken = async () => {
-      await getCsrfToken();
+      const req = await getCsrfToken();
+      if(req.status===200) {
+
+      }
     }
     fetchToken();
   },[])
@@ -32,7 +35,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     setLoading(true);
     const fetchUser = async () =>{
-      if(sessionid){
         try {
           const rep = await getMe();
           if(rep.status === 200) {
@@ -43,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         } catch(error) {
           console.error(error);
         }
-      }
+      
     }
     fetchUser();
   },[])
@@ -69,14 +71,16 @@ export const AuthProvider = ({ children }) => {
 
   const Logout = async () => {
     const rep = await logout();
-    console.log(rep);
-    setUser({
-      wordsLearned : 0,
-      streak : 0,
-      points : 0,
-      studyTime: 0
-    });
-    setIsAuthenticated(false);
+    // console.log(rep);
+    if(rep.status === 200) {
+      setUser({
+        wordsLearned : 0,
+        streak : 0,
+        points : 0,
+        studyTime: 0
+      });
+      setIsAuthenticated(false);
+    }
     
   };
 

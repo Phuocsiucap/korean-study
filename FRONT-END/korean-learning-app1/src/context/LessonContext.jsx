@@ -14,12 +14,14 @@ export const LessonProvider = ({ children }) => {
         try {
             setLoading(true);
             const response = await getLessons(categoryId);
-            const lessonsData = Array.isArray(response) ? response : (response || []);
-            setLessonsMap(prev => ({
-                ...prev,
-                [categoryId]: lessonsData
-            }));
-            console.log("Fetched lessons for category", categoryId, ":", lessonsData);
+            if(response.status ===200) {
+                const lessonsData = Array.isArray(response.data) ? response.data : (response.data || []);
+                setLessonsMap(prev => ({
+                    ...prev,
+                    [categoryId]: lessonsData
+                }));
+                console.log("Fetched lessons for category", categoryId, ":", lessonsData);
+            }
         } catch (error) {
             console.error("Failed to fetch lessons:", error);
         } finally {
@@ -35,10 +37,13 @@ export const LessonProvider = ({ children }) => {
     const addLesson = async (categoryId, newLesson) => {
         try {
             const response = await createLesson(categoryId, newLesson);
-            setLessonsMap(prevMap => ({
-                ...prevMap,
-                [categoryId]: [...(prevMap[categoryId] || []), response]
-            }));
+            if(response.status ===200) {
+                setLessonsMap(prevMap => ({
+                    ...prevMap,
+                    [categoryId]: [...(prevMap[categoryId] || []), response.data]
+                }));
+            }
+            
         } catch (error) {
             console.error("Failed to add lesson:", error);
         }
@@ -48,12 +53,14 @@ export const LessonProvider = ({ children }) => {
         console.log("call edit");   
         try {
             const response = await updateLesson(categoryId, lessonId, updatedLesson);
-            setLessonsMap(prevMap => ({
-                ...prevMap,
-                [categoryId]: prevMap[categoryId].map(lesson => 
-                    lesson.id === lessonId ? response : lesson
-                )
-            }));
+            if(response.status === 200) {
+                setLessonsMap(prevMap => ({
+                    ...prevMap,
+                    [categoryId]: prevMap[categoryId].map(lesson => 
+                        lesson.id === lessonId ? response.data : lesson
+                    )
+                }));
+            }
         } catch (error) {
             console.error("Failed to update lesson:", error);
         }
@@ -61,11 +68,14 @@ export const LessonProvider = ({ children }) => {
 
     const removeLesson = async (categoryId, lessonId) => {
         try {
-            await deleteLesson(categoryId, lessonId);
-            setLessonsMap(prevMap => ({
-                ...prevMap,
-                [categoryId]: prevMap[categoryId].filter(lesson => lesson.id !== lessonId)
-            }));
+            const response = await deleteLesson(categoryId, lessonId);
+            if(response.status === 200) {
+                setLessonsMap(prevMap => ({
+                    ...prevMap,
+                    [categoryId]: prevMap[categoryId].filter(lesson => lesson.id !== lessonId)
+                }));
+            }
+            
         } catch (error) {
             console.error("Failed to delete lesson:", error);
         }

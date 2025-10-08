@@ -6,7 +6,7 @@ const CategoryContext = createContext();
 
 //provider
 export const CategoryProvider = ({children}) => {
-    const {user, isAuthenticated } = useAuth()
+    const {isAuthenticated } = useAuth()
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -16,8 +16,9 @@ export const CategoryProvider = ({children}) => {
             if(isAuthenticated) {
                 try {
                     const data = await getCategories();
-                    setCategories(data);
-
+                    if(data.status === 200) {
+                        setCategories(data.data);
+                    }
                 } catch(error) {
                     console.error("Failed to fetch categories:", error);
                 } finally {
@@ -26,18 +27,17 @@ export const CategoryProvider = ({children}) => {
             } else {
                 setCategories([]);
             }
-            
         }
-        
         fetchCategories();
     }, [isAuthenticated]);// chay 1 lan khi component mount
     
     const addCategory = async (newCategory) => {
         try {
             const data = await createCategory(newCategory);
-            
-            setCategories((prevCategories) => [...prevCategories, data]);
-            console.log("Categories after added:",categories);
+            if(data.status===200) {
+                setCategories((prevCategories) => [...prevCategories, data.data]);
+                console.log("Categories after added:",categories);
+            }
             
         } catch(error) {
             console.error("Failed to add category:", error);
