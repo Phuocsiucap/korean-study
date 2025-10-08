@@ -42,7 +42,7 @@ export const apiCall2 = async (method, endpoint, data = null, config = {}) => {
       ...config,
     });
     console.log(response.data);
-    return response.data;
+    return response;
   } catch (error) {
     console.error(
       `API error [${method.toUpperCase()} ${endpoint}]:`,
