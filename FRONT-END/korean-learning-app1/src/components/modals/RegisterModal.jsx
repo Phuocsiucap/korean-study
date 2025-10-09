@@ -99,7 +99,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
       }, 1000);
       
     } catch (error) {
-      setErrors({ ...errors, email: 'Không thể gửi mã xác nhận. Vui lòng thử lại' });
+      setErrors({ ...errors,  email: error.response?.data?.error || "Không thể gửi mã xác nhận. Vui lòng thử lại",});
       console.error('Error sending OTP:', error);
       setIsSendingCode(false);
     }

@@ -11,6 +11,7 @@ const LoginModal = ({ onClose, onSwitchToRegister }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -48,6 +49,7 @@ const LoginModal = ({ onClose, onSwitchToRegister }) => {
     }
 
     // Gọi hàm Login từ AuthContext
+    setIsLoading(true);
     try {
       const data = await Login({
         username: formData.username,
@@ -56,8 +58,9 @@ const LoginModal = ({ onClose, onSwitchToRegister }) => {
       onClose();
     } catch(e) {
       setErrors(e.response?.data?.error || "Đăng nhập thất bại!");
+    } finally {
+      setIsLoading(false);
     }
-    
   };
 
   return (
@@ -147,9 +150,20 @@ const LoginModal = ({ onClose, onSwitchToRegister }) => {
           {/* Submit button */}
           <button
             onClick={handleSubmit}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            Đăng nhập
+            {isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Đang đăng nhập...
+              </>
+            ) : (
+              'Đăng nhập'
+            )}
           </button>
         </div>
 
