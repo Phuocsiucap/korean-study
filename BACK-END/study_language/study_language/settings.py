@@ -162,10 +162,11 @@ else:
         "https://korean-study-phuoc.onrender.com",
     ]
 
+    CSRF_COOKIE_DOMAIN = ".onrender.com"
+    SESSION_COOKIE_DOMAIN = ".onrender.com"
 
-
-SESSION_COOKIE_AGE = 1209600        # 2 tuần (tùy chỉnh)
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+    SESSION_COOKIE_AGE = 1209600        # 2 tuần (tùy chỉnh)
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 
 REST_FRAMEWORK = {
