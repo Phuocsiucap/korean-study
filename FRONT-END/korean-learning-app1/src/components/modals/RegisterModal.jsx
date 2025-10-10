@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, Eye, EyeOff, Send, CheckCircle } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const RegisterModal = ({ onClose, onSwitchToLogin }) => {
-  const { Register, sendOtp } = useAuth();
+  const { Register,Simple_Register } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    verificationCode: ''
+    // verificationCode: ''  
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isCodeSent, setIsCodeSent] = useState(false);
-  const [countdown, setCountdown] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSendingCode, setIsSendingCode] = useState(false);
+  
+ 
+  // const [isCodeSent, setIsCodeSent] = useState(false);
+  // const [countdown, setCountdown] = useState(0);
+  // const [isSendingCode, setIsSendingCode] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -56,54 +58,55 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
       newErrors.confirmPassword = 'Mật khẩu không khớp';
     }
 
-    if (!formData.verificationCode) {
-      newErrors.verificationCode = 'Vui lòng nhập mã xác nhận';
-    } else if (formData.verificationCode.length !== 6) {
-      newErrors.verificationCode = 'Mã xác nhận phải có 6 ký tự';
-    }
+    // ========== COMMENT VALIDATION MÃ XÁC THỰC ==========
+    // if (!formData.verificationCode) {
+    //   newErrors.verificationCode = 'Vui lòng nhập mã xác nhận';
+    // } else if (formData.verificationCode.length !== 6) {
+    //   newErrors.verificationCode = 'Mã xác nhận phải có 6 ký tự';
+    // }
     
     return newErrors;
   };
 
-  const handleSendCode = async () => {
-    if (!formData.email) {
-      setErrors({ ...errors, email: 'Vui lòng nhập email' });
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setErrors({ ...errors, email: 'Email không hợp lệ' });
-      return;
-    }
+  // ========== COMMENT HÀM GỬI MÃ XÁC THỰC ==========
+  // const handleSendCode = async () => {
+  //   if (!formData.email) {
+  //     setErrors({ ...errors, email: 'Vui lòng nhập email' });
+  //     return;
+  //   }
+  //   if (!/\S+@\S+\.\S+/.test(formData.email)) {
+  //     setErrors({ ...errors, email: 'Email không hợp lệ' });
+  //     return;
+  //   }
 
-    setIsSendingCode(true);
+  //   setIsSendingCode(true);
     
-    // Đợi một chút để animation hiển thị
-    await new Promise(resolve => setTimeout(resolve, 100));
+  //   await new Promise(resolve => setTimeout(resolve, 100));
     
-    try {
-      const response = await sendOtp({ email: formData.email });
+  //   try {
+  //     const response = await sendOtp({ email: formData.email });
 
-      setIsCodeSent(true);
-      setCountdown(60);
-      setErrors({ ...errors, email: '' });
-      setIsSendingCode(false);
+  //     setIsCodeSent(true);
+  //     setCountdown(60);
+  //     setErrors({ ...errors, email: '' });
+  //     setIsSendingCode(false);
       
-      const timer = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  //     const timer = setInterval(() => {
+  //       setCountdown(prev => {
+  //         if (prev <= 1) {
+  //           clearInterval(timer);
+  //           return 0;
+  //         }
+  //         return prev - 1;
+  //       });
+  //     }, 1000);
       
-    } catch (error) {
-      setErrors({ ...errors,  email: error.response?.data?.error || "Không thể gửi mã xác nhận. Vui lòng thử lại",});
-      console.error('Error sending OTP:', error);
-      setIsSendingCode(false);
-    }
-  };
+  //   } catch (error) {
+  //     setErrors({ ...errors,  email: error.response?.data?.error || "Không thể gửi mã xác nhận. Vui lòng thử lại",});
+  //     console.error('Error sending OTP:', error);
+  //     setIsSendingCode(false);
+  //   }
+  // };
 
   const handleSubmit = async () => {
     const newErrors = validateForm();
@@ -114,11 +117,11 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
     
     setIsSubmitting(true);
     try {
-      await Register({
+      await Simple_Register({
         username: formData.name,
         email: formData.email,
         password: formData.password,
-        verification_code: formData.verificationCode
+        // verification_code: formData.verificationCode  // Comment để dùng simple register
       });
       onClose();
     } catch(error) {
@@ -141,26 +144,18 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
             scrollbar-width: none;
           }
         `}</style>
-        {/* Header với gradient */}
-        {/* Header với gradient - giảm chiều cao và padding */}
+
+        {/* Header */}
         <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-5 rounded-t-3xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
           <div className="absolute bottom-0 left-0 w-20 h-20 bg-white opacity-10 rounded-full -ml-8 -mb-8"></div>
           
-          {/* <div
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full cursor-pointer z-20"
-          >
-            ✕
-          </div> */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 hover:text-gray-600 text-2xl z-20"
+            className="absolute top-4 right-4 text-2xl z-20 text-white hover:text-gray-200 transition-colors"
           >
             ✕
           </button>
-
-
 
           <div className="text-center relative z-10">
             <div className="text-5xl mb-2">🇰🇷</div>
@@ -172,7 +167,6 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
             </p>
           </div>
         </div>
-
 
         {/* Form */}
         <div className="p-8 space-y-5">
@@ -207,7 +201,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
             )}
           </div>
 
-          {/* Email & OTP */}
+          {/* Email */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Email
@@ -232,8 +226,8 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
             )}
           </div>
 
-          {/* Mã xác nhận */}
-          <div>
+          {/* ========== COMMENT PHẦN MÃ XÁC THỰC ========== */}
+          {/* <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Mã xác nhận
             </label>
@@ -281,7 +275,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                 <CheckCircle className="w-4 h-4" /> Mã xác nhận đã được gửi đến email của bạn
               </p>
             )}
-          </div>
+          </div> */}
 
           {/* Mật khẩu */}
           <div>

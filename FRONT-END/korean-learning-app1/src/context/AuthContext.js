@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
-import { login, logout, register, getMe, send_otp, getCsrfToken} from "../services/auth"
+import { login, logout, register, getMe, send_otp, getCsrfToken, simple_register} from "../services/auth"
 import Cookies from "js-cookie";
 
 const AuthContext = createContext();
@@ -64,14 +64,22 @@ export const AuthProvider = ({ children }) => {
 
   const Register = async (userData) => {
     const rep = await register(userData);
-    if(rep.status === 200) {
+    if(rep.status === 201) {
       setUser(rep.data.user);
       setIsAuthenticated(true);
     }
     return rep;
     
   };
-
+  const Simple_Register = async (userData) => {
+    const rep = await simple_register(userData);
+    if(rep.status === 201) {
+      setUser(rep.data.user);
+      setIsAuthenticated(true);
+    }
+    return rep;
+    
+  };
   const Logout = async () => {
     const rep = await logout();
     // console.log(rep);
@@ -106,7 +114,7 @@ export const AuthProvider = ({ children }) => {
   
 
   return (
-    <AuthContext.Provider value={{ loading, user, isAuthenticated,setIsAuthenticated, Login, Register, Logout,getInfo, sendOtp }}>
+    <AuthContext.Provider value={{ loading, user, isAuthenticated,setIsAuthenticated, Login, Register, Logout,getInfo, sendOtp,Simple_Register }}>
       {children}
     </AuthContext.Provider>
   );

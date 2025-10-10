@@ -157,3 +157,65 @@ def me(request):
         return Response({"error": "Chưa đăng nhập"}, status=status.HTTP_401_UNAUTHORIZED)
     serializer = CustomUserSerializer(request.user)
     return Response(serializer.data)
+
+
+# Thêm endpoint này vào file views.py của bạn
+
+# ===================== SIMPLE REGISTER (Không cần OTP) =====================
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def simple_register(request):
+    """Đăng ký đơn giản không cần mã xác thực"""
+    username = request.data.get("username")
+    password = request.data.get("password")
+    email = request.data.get("email")
+
+    # Validate input
+    if not email or not username or not password:
+        return Response(
+            {"error": "Tất cả các trường là bắt buộc"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Kiểm tra username đã tồn tại chưa
+    if User.objects.filter(username=username).exists():
+        return Response(
+            {"error": "Tên đăng nhập đã tồn tại"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Kiểm tra email đã tồn tại chưa
+    if User.objects.filter(email=email).exists():
+        return Response(
+            {"error": "Email đã được đăng ký"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # Tạo user
+        user = User.objects.create_user(
+            username=username, 
+            password=password, 
+            email=email
+        )
+        
+        # Tự động đăng nhập sau khi đăng ký
+        login(request, user)
+        
+        # Serialize user data
+        serializer = CustomUserSerializer(user)
+        
+        return Response({
+            "message": "Đăng ký thành công",
+            "user": serializer.data
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        print(f"❌ Lỗi khi tạo user: {e}")
+        return Response(
+            {"error": "Không thể tạo tài khoản. Vui lòng thử lại"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+
