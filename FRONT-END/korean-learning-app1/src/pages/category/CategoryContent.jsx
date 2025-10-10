@@ -2,12 +2,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Play, BookOpen, Clock, Trophy, Plus, Edit, Trash2, Star } from 'lucide-react';
-import AddLessonModal from '../components/modals/AddLessonModal';
-import EditLessonModal from '../components/modals/EditLessonModal';
-import DeleteLessonModal from '../components/modals/DeleteLessonModal';
-import { useLessons } from '../context/LessonContext';
-import { useCategories } from '../context/CategoryContext';
-import { formatTimeAgo } from '../utils/dateUtils';
+import AddLessonModal from '../../components/modals/AddLessonModal';
+import EditLessonModal from '../../components/modals/EditLessonModal';
+import DeleteLessonModal from '../../components/modals/DeleteLessonModal';
+import { useLessons } from '../../context/LessonContext';
+import { useCategories } from '../../context/CategoryContext';
+import { formatTimeAgo } from '../../utils/dateUtils';
 
 const CategoryContent = () => {
   const { categoryId } = useParams();

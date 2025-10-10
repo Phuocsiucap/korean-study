@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 
-import { useCategories} from '../context/CategoryContext';
+import { useCategories} from '../../context/CategoryContext';
 
 const AddCategoryPage = () => {
   const { addCategory } = useCategories();

@@ -8,7 +8,7 @@ import { AuthProvider } from "./context/AuthContext";
 // import { ProgressProvider } from "./context/ProgressContext";
 
 // Pages
-import HomePage from "./pages/HomePage";
+import HomePage from "./pages/home";
 
 import ProfilePage from "./pages/user/ProfilePage";
 
@@ -18,8 +18,8 @@ import FlashcardPage from "./pages/flashcard";
 import ListenChoicePage from "./pages/listenchoice";
 import ListenWritePage from "./pages/listenwrite";
 import ListenAudioPage from "./pages/listenaudio";
-import CategoryPage from "./pages/CategoryPage";
-import AddCategoryPage from "./pages/AddCategoryPage";
+import CategoryPage from "./pages/category";
+import AddCategoryPage from "./pages/home/AddCategoryPage";
 
 // Styles (Tailwind or CSS global)
 import "./styles/globals.css";
@@ -48,6 +48,7 @@ function App() {
               
 
               <Route path="/category/:categoryId" element={<CategoryPage />} />
+              <Route path="/category/:categoryId/*" element={<CategoryPage />} />
               <Route path="/add-category" element={<AddCategoryPage />} />
             </Routes>
           </Router>

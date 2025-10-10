@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import Header from '../components/common/home/Header';
-import StatsOverview from '../components/common/home/StatsOverview';
-import CategoryCard from '../components/navigation/CategoryCard';
-import ModeSelector from '../components/navigation/ModeSelector';
-import ProgressBar from '../components/common/home/ProgressBar';
-import GrammarSection from '../components/common/GrammarSection';
-import { useCategories } from '../context/CategoryContext';
-import { learningModes } from '../data/learningModes';
-import { useAuth } from "../context/AuthContext";
+import Header from '../../components/common/home/Header';
+import StatsOverview from '../../components/common/home/StatsOverview';
+import CategoryCard from '../../components/navigation/CategoryCard';
+import ModeSelector from '../../components/navigation/ModeSelector';
+import ProgressBar from '../../components/common/home/ProgressBar';
+import GrammarSection from '../../components/common/GrammarSection';
+import { useCategories } from '../../context/CategoryContext';
+import { learningModes } from '../../data/learningModes';
+import { useAuth } from "../../context/AuthContext";
 
 const HomePage = () => {
   const { categories } = useCategories();

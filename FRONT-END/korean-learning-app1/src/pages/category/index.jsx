@@ -2,7 +2,7 @@
 import {  useParams } from 'react-router-dom';
 
 import CategoryContent from './CategoryContent';
-import { LessonProvider } from "../context/LessonContext";
+import { LessonProvider } from "../../context/LessonContext";
 // import { categoriesData } from '../data/categories';
 
 
