@@ -1,9 +1,10 @@
-// src/pages/ListenChoiceMode.jsx - Refactored
+// src/pages/ListenChoiceMode.jsx - Refactored with Filters
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Volume2, Check, X } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Volume2, Check, X, Trophy } from 'lucide-react';
 import { useLessons } from '../../context/LessonContext';
 import { useLearningProgress } from '../../context/useLearningProgress';
+import { filterWords, parseFilterParams } from '../../utils/filterUtils';
 
 // Import shared components
 import LearningResultScreen from '../../components/common/learning/LearningResultScreen';
@@ -16,12 +17,34 @@ import WordInfoTags from '../../components/common/learning/WordInfoTags';
 const ListenChoiceContent = () => {
   const { categoryId, lessonId } = useParams();
   const navigate = useNavigate();
-  const { lessons, editLesson } = useLessons(categoryId);
+  const [searchParams] = useSearchParams();
   
-  const [lesson, setLesson] = useState(null);
+  const { lessons, editLesson } = useLessons(categoryId);
+  const [originalLesson, setOriginalLesson] = useState(null);
+  const [filteredLesson, setFilteredLesson] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [answers, setAnswers] = useState([]);
+
+  // Load original lesson
+  useEffect(() => {
+    const foundLesson = lessons.find(l => l.id === parseInt(lessonId));
+    if (foundLesson) {
+      setOriginalLesson(foundLesson);
+    }
+  }, [lessons, lessonId]);
+
+  // Apply filters to create filtered lesson
+  useEffect(() => {
+    if (originalLesson && originalLesson.words) {
+      const filters = parseFilterParams(searchParams);
+      const filtered = filterWords(originalLesson.words, filters);
+      setFilteredLesson({
+        ...originalLesson,
+        words: filtered
+      });
+    }
+  }, [originalLesson, searchParams]);
 
   const {
     currentIndex,
@@ -40,27 +63,20 @@ const ListenChoiceContent = () => {
     handleRestart,
     getDifficultyColor,
     getDifficultyLabel
-  } = useLearningProgress(lesson, lesson, categoryId, lessonId, editLesson);
+  } = useLearningProgress(filteredLesson, originalLesson, categoryId, lessonId, editLesson);
 
   useEffect(() => {
-    const foundLesson = lessons.find(l => l.id === parseInt(lessonId));
-    if (foundLesson) {
-      setLesson(foundLesson);
-    }
-  }, [lessons, lessonId]);
-
-  useEffect(() => {
-    if (currentCard) {
+    if (currentCard && filteredLesson) {
       generateAnswers();
       handleSpeak(currentCard.word);
     }
-  }, [currentCard]);
+  }, [currentCard, filteredLesson]);
 
   const generateAnswers = () => {
-    if (!lesson?.words || !currentCard) return;
+    if (!filteredLesson?.words || !currentCard) return;
 
     const correctAnswer = currentCard.meaning;
-    const otherWords = lesson.words.filter(w => w.id !== currentCard.id);
+    const otherWords = filteredLesson.words.filter(w => w.id !== currentCard.id);
     
     let wrongAnswers = [];
     if (otherWords.length >= 3) {
@@ -127,10 +143,35 @@ const ListenChoiceContent = () => {
   };
 
   // Loading state
-  if (!lesson) {
+  if (!originalLesson || !filteredLesson) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-indigo-50 flex items-center justify-center">
         <div className="text-lg text-gray-600">Đang tải bài học...</div>
+      </div>
+    );
+  }
+
+  // No words after filtering
+  if (filteredLesson.words.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Trophy className="w-8 h-8 text-yellow-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Không tìm thấy từ vựng
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Không có từ nào phù hợp với bộ lọc bạn chọn. Vui lòng thử lại với bộ lọc khác.
+          </p>
+          <button
+            onClick={() => navigate(`/lesson-mode/${categoryId}/${lessonId}`)}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+          >
+            Chọn lại bộ lọc
+          </button>
+        </div>
       </div>
     );
   }
@@ -142,7 +183,7 @@ const ListenChoiceContent = () => {
         score={score}
         masteredCards={masteredCards}
         updatedWords={updatedWords}
-        totalWords={lesson.words?.length || 0}
+        totalWords={filteredLesson.words?.length || 0}
         difficultCards={difficultCards}
         finalStudyTime={finalStudyTime}
         handleRestart={handleRestartClick}
@@ -178,7 +219,7 @@ const ListenChoiceContent = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-indigo-50">
       {/* Header - Using shared component */}
       <LearningHeader
-        title="Nghe & Chọn"
+        title={filteredLesson.title}
         currentIndex={currentIndex}
         totalWords={currentWords?.length || 0}
         isReviewMode={isReviewMode}
@@ -328,4 +369,3 @@ const ListenChoiceContent = () => {
 };
 
 export default ListenChoiceContent;
-
