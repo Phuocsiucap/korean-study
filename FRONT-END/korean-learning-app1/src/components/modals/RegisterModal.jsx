@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, Lock, Eye, EyeOff, Send, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
+
 const RegisterModal = ({ onClose, onSwitchToLogin }) => {
-  const { Register,Simple_Register } = useAuth();
+  const { Register, sendOtp } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,34 +16,45 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
- 
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [isSendingCode, setIsSendingCode] = useState(false);
 
+  // Countdown timer effect
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: '' });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error khi user bắt đầu nhập
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.name) {
+    if (!formData.name.trim()) {
       newErrors.name = 'Tên không được để trống';
-    } else if (formData.name.length < 2) {
+    } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Tên phải có ít nhất 2 ký tự';
     }
     
-    if (!formData.email) {
+    if (!formData.email.trim()) {
       newErrors.email = 'Email không được để trống';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email không hợp lệ';
     }
     
@@ -58,52 +70,46 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
       newErrors.confirmPassword = 'Mật khẩu không khớp';
     }
 
-    // ========== COMMENT VALIDATION MÃ XÁC THỰC ==========
-    if (!formData.verificationCode) {
+    if (!formData.verificationCode.trim()) {
       newErrors.verificationCode = 'Vui lòng nhập mã xác nhận';
-    } else if (formData.verificationCode.length !== 6) {
+    } else if (formData.verificationCode.trim().length !== 6) {
       newErrors.verificationCode = 'Mã xác nhận phải có 6 ký tự';
     }
     
     return newErrors;
   };
 
-  // ========== COMMENT HÀM GỬI MÃ XÁC THỰC ==========
   const handleSendCode = async () => {
-    if (!formData.email) {
-      setErrors({ ...errors, email: 'Vui lòng nhập email' });
+    // Clear general error
+    setErrors(prev => ({ ...prev, general: '', email: '' }));
+
+    // Validate email trước khi gửi
+    if (!formData.email.trim()) {
+      setErrors(prev => ({ ...prev, email: 'Vui lòng nhập email' }));
       return;
     }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setErrors({ ...errors, email: 'Email không hợp lệ' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: 'Email không hợp lệ' }));
       return;
     }
 
     setIsSendingCode(true);
     
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
     try {
-      const response = await sendOtp({ email: formData.email });
-
+      // Gọi API gửi OTP
+      await sendOtp({ email: formData.email.trim() });
+      
       setIsCodeSent(true);
       setCountdown(60);
-      setErrors({ ...errors, email: '' });
-      setIsSendingCode(false);
-      
-      const timer = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      setErrors(prev => ({ ...prev, email: '', verificationCode: '' }));
       
     } catch (error) {
-      setErrors({ ...errors,  email: error.response?.data?.error || "Không thể gửi mã xác nhận. Vui lòng thử lại",});
+      setErrors(prev => ({ 
+        ...prev, 
+        email: error.response?.data?.error || "Không thể gửi mã xác nhận. Vui lòng thử lại"
+      }));
       console.error('Error sending OTP:', error);
+    } finally {
       setIsSendingCode(false);
     }
   };
@@ -116,19 +122,27 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
     }
     
     setIsSubmitting(true);
+    setErrors({});
+    
     try {
       await Register({
-        username: formData.name,
-        email: formData.email,
+        username: formData.name.trim(),
+        email: formData.email.trim(),
         password: formData.password,
-        verification_code: formData.verificationCode  // Comment để dùng simple register
+        verification_code: formData.verificationCode.trim()
       });
       onClose();
     } catch(error) {
       const msg = error.response?.data?.error || "Đăng ký thất bại!";
-      setErrors({ ...errors, general: msg });
+      setErrors({ general: msg });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !isSubmitting) {
+      handleSubmit();
     }
   };
 
@@ -152,7 +166,8 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
           
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-2xl z-20 text-white hover:text-gray-200 transition-colors"
+            className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white transition-all z-20 text-lg"
+            aria-label="Đóng"
           >
             ✕
           </button>
@@ -169,17 +184,18 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
         </div>
 
         {/* Form */}
-        <div className="p-8 space-y-5">
+        <div className="p-6 space-y-4">
           {errors.general && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-              {errors.general}
+            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
+              <span className="text-lg mt-0.5">⚠️</span>
+              <span>{errors.general}</span>
             </div>
           )}
 
           {/* Tên */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Tên của bạn
+              Tên của bạn <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -188,7 +204,8 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full pl-11 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
+                onKeyPress={handleKeyPress}
+                className={`w-full pl-11 pr-4 py-2.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
                   errors.name ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                 }`}
                 placeholder="Nguyễn Văn A"
@@ -204,7 +221,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
           {/* Email */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Email
+              Email <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -213,6 +230,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                onKeyPress={handleKeyPress}
                 className={`w-full pl-11 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
                   errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                 }`}
@@ -226,10 +244,10 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
             )}
           </div>
 
-          {/* ========== COMMENT PHẦN MÃ XÁC THỰC ========== */}
+          {/* Mã xác nhận */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Mã xác nhận
+              Mã xác nhận <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -238,6 +256,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                   name="verificationCode"
                   value={formData.verificationCode}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                   maxLength={6}
                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
                     errors.verificationCode ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
@@ -255,11 +274,19 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                     : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:scale-105'
                 }`}
               >
-                {countdown > 0 ? (
+                {isSendingCode ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Đang gửi
+                  </>
+                ) : countdown > 0 ? (
                   <span>{countdown}s</span>
                 ) : (
                   <>
-                    <Send className={`w-4 h-4 ${isSendingCode ? 'animate-spin' : ''}`} />
+                    <Send className="w-4 h-4" />
                     {isCodeSent ? 'Gửi lại' : 'Gửi mã'}
                   </>
                 )}
@@ -270,7 +297,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                 <span className="text-base">⚠</span> {errors.verificationCode}
               </p>
             )}
-            {isCodeSent && !errors.verificationCode && (
+            {isCodeSent && !errors.verificationCode && countdown > 0 && (
               <p className="text-green-600 text-xs mt-1.5 ml-1 flex items-center gap-1">
                 <CheckCircle className="w-4 h-4" /> Mã xác nhận đã được gửi đến email của bạn
               </p>
@@ -280,7 +307,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
           {/* Mật khẩu */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Mật khẩu
+              Mật khẩu <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -289,6 +316,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                onKeyPress={handleKeyPress}
                 className={`w-full pl-11 pr-12 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
                   errors.password ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                 }`}
@@ -297,7 +325,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -312,7 +340,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
           {/* Xác nhận mật khẩu */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Xác nhận mật khẩu
+              Xác nhận mật khẩu <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -321,7 +349,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                onKeyPress={handleKeyPress}
                 className={`w-full pl-11 pr-12 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
                   errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                 }`}
@@ -330,7 +358,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -369,7 +397,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
               Đã có tài khoản?{' '}
               <button
                 onClick={onSwitchToLogin}
-                className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 font-bold hover:underline"
+                className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 font-bold hover:underline transition-all"
               >
                 Đăng nhập ngay
               </button>
