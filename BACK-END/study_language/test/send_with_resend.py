@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = "re_et11sQTU_CVsJDqdtjwvuzgeVDJZBrZsi" # lấy ở https://resend.com/api-keys
+API_KEY = "" # lấy ở https://resend.com/api-keys
 
 def send_email(to_email, subject, html_content):
     url = "https://api.resend.com/emails"
@@ -9,7 +9,7 @@ def send_email(to_email, subject, html_content):
         "Content-Type": "application/json"
     }
     payload = {
-        "from": "nguyenvanphuoc091104@gmail.com",  # miễn phí dùng domain của Resend
+        "from": "noreply@phuocsiucap.id.vn",  # miễn phí dùng domain của Resend
         "to": [to_email],
         "subject": subject,
         "html": html_content

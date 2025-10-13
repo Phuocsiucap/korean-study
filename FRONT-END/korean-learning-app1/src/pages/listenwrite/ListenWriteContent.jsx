@@ -1,9 +1,10 @@
-
+// src/pages/ListenWriteContent.jsx - Refactored with Filters
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Volume2, AlertCircle,Check, X } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Volume2, AlertCircle, Check, X, Trophy } from 'lucide-react';
 import { useLessons } from '../../context/LessonContext';
 import { useLearningProgress } from '../../context/useLearningProgress';
+import { filterWords, parseFilterParams } from '../../utils/filterUtils';
 
 // Import shared components
 import LearningResultScreen from '../../components/common/learning/LearningResultScreen';
@@ -16,15 +17,38 @@ import WordInfoTags from '../../components/common/learning/WordInfoTags';
 const ListenWriteContent = () => {
   const { categoryId, lessonId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
   const { lessons, editLesson } = useLessons(categoryId);
   const inputRef = useRef(null);
   
-  const [lesson, setLesson] = useState(null);
+  const [originalLesson, setOriginalLesson] = useState(null);
+  const [filteredLesson, setFilteredLesson] = useState(null);
   const [userInput, setUserInput] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
   const [showHint, setShowHint] = useState(false);
   const [needsRetry, setNeedsRetry] = useState(false);
+
+  // Load original lesson
+  useEffect(() => {
+    const foundLesson = lessons.find(l => l.id === parseInt(lessonId));
+    if (foundLesson) {
+      setOriginalLesson(foundLesson);
+    }
+  }, [lessons, lessonId]);
+
+  // Apply filters to create filtered lesson
+  useEffect(() => {
+    if (originalLesson && originalLesson.words) {
+      const filters = parseFilterParams(searchParams);
+      const filtered = filterWords(originalLesson.words, filters);
+      setFilteredLesson({
+        ...originalLesson,
+        words: filtered
+      });
+    }
+  }, [originalLesson, searchParams]);
 
   const {
     currentIndex,
@@ -43,14 +67,7 @@ const ListenWriteContent = () => {
     handleRestart,
     getDifficultyColor,
     getDifficultyLabel
-  } = useLearningProgress(lesson, lesson, categoryId, lessonId, editLesson);
-
-  useEffect(() => {
-    const foundLesson = lessons.find(l => l.id === parseInt(lessonId));
-    if (foundLesson) {
-      setLesson(foundLesson);
-    }
-  }, [lessons, lessonId]);
+  } = useLearningProgress(filteredLesson, originalLesson, categoryId, lessonId, editLesson);
 
   useEffect(() => {
     if (currentCard) {
@@ -145,10 +162,35 @@ const ListenWriteContent = () => {
   };
 
   // Loading state
-  if (!lesson) {
+  if (!originalLesson || !filteredLesson) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
         <div className="text-lg text-gray-600">Đang tải bài học...</div>
+      </div>
+    );
+  }
+
+  // No words after filtering
+  if (filteredLesson.words.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Trophy className="w-8 h-8 text-yellow-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Không tìm thấy từ vựng
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Không có từ nào phù hợp với bộ lọc bạn chọn. Vui lòng thử lại với bộ lọc khác.
+          </p>
+          <button
+            onClick={() => navigate(`/lesson-mode/${categoryId}/${lessonId}`)}
+            className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"
+          >
+            Chọn lại bộ lọc
+          </button>
+        </div>
       </div>
     );
   }
@@ -160,7 +202,7 @@ const ListenWriteContent = () => {
         score={score}
         masteredCards={masteredCards}
         updatedWords={updatedWords}
-        totalWords={lesson.words?.length || 0}
+        totalWords={filteredLesson.words?.length || 0}
         difficultCards={difficultCards}
         finalStudyTime={finalStudyTime}
         handleRestart={handleRestartClick}
@@ -196,7 +238,7 @@ const ListenWriteContent = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       {/* Header - Using shared component */}
       <LearningHeader
-        title="Nghe & Viết"
+        title={filteredLesson.title}
         currentIndex={currentIndex}
         totalWords={currentWords?.length || 0}
         isReviewMode={isReviewMode}

@@ -1,24 +1,41 @@
-from django.core.mail import send_mail
+import requests
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.core.cache import cache
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import CustomUserSerializer
-from django.contrib.auth import authenticate, login, logout
-from django.core.cache import cache
 import random
 import string
+from .serializers import CustomUserSerializer
 
 User = get_user_model()
-CLIENT_ID = settings.CLIENT_ID
-CLIENT_SECRET = settings.CLIENT_SECRET
-REFRESH_TOKEN = settings.REFRESH_TOKEN
+
+# ===================== RESEND CONFIG =====================
+RESEND_API_KEY = settings.RESEND_API_KEY
+RESEND_URL = settings.RESEND_URL
+
+
+def send_email_resend(to_email, subject, html_content):
+    """Gửi email qua Resend API"""
+    headers = {
+        "Authorization": f"Bearer {RESEND_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "from": "noreply@phuocsiucap.id.vn",   # domain đã verify trong Resend
+        "to": [to_email],
+        "subject": subject,
+        "html": html_content
+    }
+    res = requests.post(RESEND_URL, headers=headers, json=payload)
+    print(f"📤 Gửi email tới {to_email}: {res.status_code} {res.text}")
+    return res.status_code == 200 or res.status_code == 202
+
+
 # ===================== GENERATE OTP =====================
 def generate_otp(length=6):
-    """Tạo mã OTP ngẫu nhiên gồm 6 chữ số"""
     return ''.join(random.choices(string.digits, k=length))
 
 
@@ -27,48 +44,30 @@ def generate_otp(length=6):
 @permission_classes([AllowAny])
 def send_otp(request):
     email = request.data.get("email")
-    
+
     if not email:
         return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Kiểm tra email đã tồn tại chưa
+
     if User.objects.filter(email=email).exists():
         return Response({"error": "Email đã được đăng ký"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Tạo mã OTP
+
     otp_code = generate_otp()
-    
-    # Lưu OTP vào cache với thời gian hết hạn 5 phút (300 giây)
     cache_key = f"otp_{email}"
     cache.set(cache_key, otp_code, timeout=300)
-    
-    # Gửi email
-    try:
-        send_mail(
-            subject="🔐 Mã xác nhận đăng ký - Study Language",
-            message=f"""
-                Xin chào,
 
-                Mã xác nhận của bạn là: {otp_code}
+    # Gửi OTP bằng Resend
+    html_body = f"""
+        <h3>🔐 Mã xác nhận đăng ký Study Language</h3>
+        <p>Mã xác nhận của bạn là: <b>{otp_code}</b></p>
+        <p>Mã sẽ hết hạn sau 5 phút.</p>
+        <p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</p>
+        <p>Trân trọng,<br>Đội ngũ Study Language 🌱</p>
+    """
 
-                Mã này sẽ hết hạn sau 5 phút.
-
-                Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.
-
-                Trân trọng,
-                Đội ngũ Study Language 🌱
-            """,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False,
-        )
+    if send_email_resend(email, "🔐 Mã xác nhận đăng ký - Study Language", html_body):
         print(f"📧 OTP đã được gửi tới {email}: {otp_code}")
-        return Response({
-            "message": "Mã xác nhận đã được gửi đến email của bạn",
-            "email": email
-        })
-    except Exception as e:
-        print(f"❌ Lỗi khi gửi email: {e}")
+        return Response({"message": "Mã xác nhận đã được gửi đến email của bạn"})
+    else:
         return Response({"error": "Không thể gửi email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -84,44 +83,30 @@ def register(request):
     if not email or not username or not password or not verification_code:
         return Response({"error": "Tất cả các trường là bắt buộc"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Kiểm tra OTP
     cache_key = f"otp_{email}"
     stored_otp = cache.get(cache_key)
-    
+
     if not stored_otp:
         return Response({"error": "Mã xác nhận đã hết hạn. Vui lòng gửi lại mã"}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     if stored_otp != verification_code:
         return Response({"error": "Mã xác nhận không chính xác"}, status=status.HTTP_400_BAD_REQUEST)
 
     if User.objects.filter(username=username).exists():
         return Response({"error": "Tên đăng nhập đã tồn tại"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-    # Tạo user
     user = User.objects.create_user(username=username, password=password, email=email)
-    
-    # Xóa OTP sau khi đăng ký thành công
     cache.delete(cache_key)
 
     # Gửi email chào mừng
-    try:
-        html_body = f"""
-            <h3>Xin chào!</h3>
-            <p>Mã xác nhận của bạn là: <b>{otp_code}</b></p>
-            <p>Mã sẽ hết hạn sau 5 phút.</p>
-            <p>Trân trọng,<br>Đội ngũ Study Language 🌱</p>
-        """
-        send_gmail_api(
-            to_email=email,
-            subject="🔐 Mã xác nhận đăng ký - Study Language",
-            html_content=html_body
-        )
+    html_body = f"""
+        <h2>Chào mừng {username}!</h2>
+        <p>Tài khoản của bạn đã được tạo thành công.</p>
+        <p>Chúc bạn học tập hiệu quả cùng <b>Study Language 🌱</b></p>
+    """
+    send_email_resend(email, "🎉 Chào mừng đến với Study Language!", html_body)
 
-        print(f"📧 Email chào mừng đã được gửi tới: {email}")
-    except Exception as e:
-        print(f"❌ Lỗi khi gửi email: {e}")
-
+    print(f"📧 Email chào mừng đã gửi tới: {email}")
     return Response({"message": "Đăng ký thành công"})
 
 
@@ -159,63 +144,31 @@ def me(request):
     return Response(serializer.data)
 
 
-# Thêm endpoint này vào file views.py của bạn
-
-# ===================== SIMPLE REGISTER (Không cần OTP) =====================
+# ===================== SIMPLE REGISTER =====================
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def simple_register(request):
-    """Đăng ký đơn giản không cần mã xác thực"""
     username = request.data.get("username")
     password = request.data.get("password")
     email = request.data.get("email")
 
-    # Validate input
     if not email or not username or not password:
-        return Response(
-            {"error": "Tất cả các trường là bắt buộc"}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "Tất cả các trường là bắt buộc"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Kiểm tra username đã tồn tại chưa
     if User.objects.filter(username=username).exists():
-        return Response(
-            {"error": "Tên đăng nhập đã tồn tại"}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    # Kiểm tra email đã tồn tại chưa
+        return Response({"error": "Tên đăng nhập đã tồn tại"}, status=status.HTTP_400_BAD_REQUEST)
+
     if User.objects.filter(email=email).exists():
-        return Response(
-            {"error": "Email đã được đăng ký"}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "Email đã được đăng ký"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        # Tạo user
-        user = User.objects.create_user(
-            username=username, 
-            password=password, 
-            email=email
-        )
-        
-        # Tự động đăng nhập sau khi đăng ký
+        user = User.objects.create_user(username=username, password=password, email=email)
         login(request, user)
-        
-        # Serialize user data
         serializer = CustomUserSerializer(user)
-        
         return Response({
             "message": "Đăng ký thành công",
             "user": serializer.data
         }, status=status.HTTP_201_CREATED)
-        
     except Exception as e:
         print(f"❌ Lỗi khi tạo user: {e}")
-        return Response(
-            {"error": "Không thể tạo tài khoản. Vui lòng thử lại"}, 
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-
+        return Response({"error": "Không thể tạo tài khoản. Vui lòng thử lại"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

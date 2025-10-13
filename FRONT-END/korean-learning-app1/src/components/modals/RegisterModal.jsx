@@ -9,7 +9,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    // verificationCode: ''  
+    verificationCode: ''  
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -17,9 +17,9 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
  
-  // const [isCodeSent, setIsCodeSent] = useState(false);
-  // const [countdown, setCountdown] = useState(0);
-  // const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [isSendingCode, setIsSendingCode] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -59,54 +59,54 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
     }
 
     // ========== COMMENT VALIDATION MÃ XÁC THỰC ==========
-    // if (!formData.verificationCode) {
-    //   newErrors.verificationCode = 'Vui lòng nhập mã xác nhận';
-    // } else if (formData.verificationCode.length !== 6) {
-    //   newErrors.verificationCode = 'Mã xác nhận phải có 6 ký tự';
-    // }
+    if (!formData.verificationCode) {
+      newErrors.verificationCode = 'Vui lòng nhập mã xác nhận';
+    } else if (formData.verificationCode.length !== 6) {
+      newErrors.verificationCode = 'Mã xác nhận phải có 6 ký tự';
+    }
     
     return newErrors;
   };
 
   // ========== COMMENT HÀM GỬI MÃ XÁC THỰC ==========
-  // const handleSendCode = async () => {
-  //   if (!formData.email) {
-  //     setErrors({ ...errors, email: 'Vui lòng nhập email' });
-  //     return;
-  //   }
-  //   if (!/\S+@\S+\.\S+/.test(formData.email)) {
-  //     setErrors({ ...errors, email: 'Email không hợp lệ' });
-  //     return;
-  //   }
+  const handleSendCode = async () => {
+    if (!formData.email) {
+      setErrors({ ...errors, email: 'Vui lòng nhập email' });
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setErrors({ ...errors, email: 'Email không hợp lệ' });
+      return;
+    }
 
-  //   setIsSendingCode(true);
+    setIsSendingCode(true);
     
-  //   await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
     
-  //   try {
-  //     const response = await sendOtp({ email: formData.email });
+    try {
+      const response = await sendOtp({ email: formData.email });
 
-  //     setIsCodeSent(true);
-  //     setCountdown(60);
-  //     setErrors({ ...errors, email: '' });
-  //     setIsSendingCode(false);
+      setIsCodeSent(true);
+      setCountdown(60);
+      setErrors({ ...errors, email: '' });
+      setIsSendingCode(false);
       
-  //     const timer = setInterval(() => {
-  //       setCountdown(prev => {
-  //         if (prev <= 1) {
-  //           clearInterval(timer);
-  //           return 0;
-  //         }
-  //         return prev - 1;
-  //       });
-  //     }, 1000);
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
       
-  //   } catch (error) {
-  //     setErrors({ ...errors,  email: error.response?.data?.error || "Không thể gửi mã xác nhận. Vui lòng thử lại",});
-  //     console.error('Error sending OTP:', error);
-  //     setIsSendingCode(false);
-  //   }
-  // };
+    } catch (error) {
+      setErrors({ ...errors,  email: error.response?.data?.error || "Không thể gửi mã xác nhận. Vui lòng thử lại",});
+      console.error('Error sending OTP:', error);
+      setIsSendingCode(false);
+    }
+  };
 
   const handleSubmit = async () => {
     const newErrors = validateForm();
@@ -117,11 +117,11 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
     
     setIsSubmitting(true);
     try {
-      await Simple_Register({
+      await Register({
         username: formData.name,
         email: formData.email,
         password: formData.password,
-        // verification_code: formData.verificationCode  // Comment để dùng simple register
+        verification_code: formData.verificationCode  // Comment để dùng simple register
       });
       onClose();
     } catch(error) {
@@ -227,7 +227,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
           </div>
 
           {/* ========== COMMENT PHẦN MÃ XÁC THỰC ========== */}
-          {/* <div>
+          <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Mã xác nhận
             </label>
@@ -275,7 +275,7 @@ const RegisterModal = ({ onClose, onSwitchToLogin }) => {
                 <CheckCircle className="w-4 h-4" /> Mã xác nhận đã được gửi đến email của bạn
               </p>
             )}
-          </div> */}
+          </div>
 
           {/* Mật khẩu */}
           <div>

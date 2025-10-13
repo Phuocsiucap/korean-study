@@ -221,6 +221,7 @@ else:
     }
     
     
-CLIENT_ID=os.getenv("CLIENT_ID")
-CLIENT_SECRET=os.getenv("CLIENT_SECRET")
-REFRESH_TOKEN=os.getenv("CLIENT_SECRET")
+
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+RESEND_URL = os.getenv("RESEND_URL", "https://api.resend.com/emails")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
