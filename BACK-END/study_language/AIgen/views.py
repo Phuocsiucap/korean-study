@@ -3,7 +3,7 @@ import google.genai as genai
 from django.conf import settings
 import json
 import re
-
+import requests
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -56,17 +56,25 @@ sample = """
     }
 """
 
-def call_gemini_flash(promt):
-    response  = client.models.generate_content(
-        model="models/gemini-2.5-flash",
-        contents=promt,
-        # temperature=0.2,
-        # max_output_tokens=1024,
-        # top_p=0.8,
-        # top_k=40,
-        # stop_sequences=["###"]
-    )
-    return response.text
+BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+
+# ✳️ Gọi Gemini qua REST API
+def call_gemini_flash(prompt, model="gemini-2.0-flash"):
+    url = f"{BASE_URL}/{model}:generateContent?key={api_key}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [
+            {"parts": [{"text": prompt}]}
+        ]
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    try:
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception:
+        print("⚠️ Lỗi phản hồi Gemini:", data)
+        return None
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -74,26 +82,32 @@ def generate_quiz(request):
     data = request.data
     words = data.get("words", [])
     question_count = data.get("numOfquestion", 5)
+
     if not words:
         return Response({"error": "Danh sách từ trống"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    words_list = ', '.join(words)
-    # Tạo prompt cho Gemini
-    prompt = f"""
-    Dưới đây là dữ liệu thực tế từ cơ sở dữ liệu
-    {words_list}
-    Tạo {question_count} câu hỏi trong cho đề kiểm tra dưới dạng json như mẫu sau cho các từ tìm được .
-    {sample}
-    Trả lời dưới dạng json, không giải thích gì thêm.
-    """
-    print("🤖 Gửi prompt tới Gemini...")
-    response = client.models.generate_content(
-        model="models/gemini-2.5-pro",
-        contents=prompt
-    )
-    text = response.text.strip()
 
-    # 🧹 Loại bỏ code block markdown nếu có
+    words_list = ", ".join(words)
+
+    prompt = f"""
+    Dưới đây là dữ liệu thực tế từ cơ sở dữ liệu:
+    {words_list}
+
+    Hãy tạo {question_count} câu hỏi cho bài kiểm tra, ở dạng JSON như mẫu dưới đây.
+    Mỗi câu hỏi có các thuộc tính tương tự mẫu (id, type, prompt, answer, choices, v.v.).
+    Đáp án phải nằm trong danh sách từ trên.
+    Trả lời duy nhất bằng JSON hợp lệ, không giải thích thêm.
+
+    Mẫu:
+    {sample}
+    """
+
+    print("🤖 Gửi prompt tới Gemini REST API...")
+    text = call_gemini_flash(prompt, model="gemini-2.5-pro")
+
+    if not text:
+        return Response({"error": "Không nhận được phản hồi từ Gemini"}, status=500)
+
+    # 🧹 Làm sạch JSON nếu Gemini trả về có markdown
     text = re.sub(r"^```json|```$", "", text, flags=re.MULTILINE).strip()
 
     try:
