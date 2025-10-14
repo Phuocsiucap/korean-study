@@ -67,7 +67,7 @@ def call_gemini_flash(prompt, model="gemini-2.0-flash"):
             {"parts": [{"text": prompt}]}
         ]
     }
-    response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(url, headers=headers, json=payload, timeout=180)
     data = response.json()
     try:
         return data["candidates"][0]["content"]["parts"][0]["text"]
