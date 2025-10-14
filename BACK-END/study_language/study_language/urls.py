@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from category.urls import urlpatterns as category_urls
 from users.urls import urlpatterns as users_urls
+from AIgen.urls import urlpatterns as AIgen_urls
 
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse
@@ -32,4 +33,5 @@ urlpatterns = [
     path("api/csrf/", csrf_view),
     path("api/", include(category_urls)),
     path('api/users/', include(users_urls)),
+    path('api/aigen/', include(AIgen_urls)),
 ]

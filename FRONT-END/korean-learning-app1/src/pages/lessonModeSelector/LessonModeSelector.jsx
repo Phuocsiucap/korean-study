@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Headphones, PenTool, Volume2, Play, Settings } from 'lucide-react';
 import LessonFilterModal from '../../components/modals/LessonFilterModal';
+import TestFilterModal from '../../components/modals/TestFilterModal';
 import { useLessons } from '../../context/LessonContext';
 
 const LessonModeSelector = () => {
@@ -9,7 +10,8 @@ const LessonModeSelector = () => {
   const navigate = useNavigate();
   const { lessons } = useLessons(categoryId);
   
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showPracticeModal, setShowPracticeModal] = useState(false);
+  const [showTestModal, setShowTestModal] = useState(false);
   const [selectedMode, setSelectedMode] = useState(null);
   const [currentLesson, setCurrentLesson] = useState(null);
 
@@ -27,7 +29,8 @@ const LessonModeSelector = () => {
       color: 'from-indigo-500 to-purple-600',
       bgColor: 'bg-gradient-to-br from-indigo-50 to-purple-50',
       borderColor: 'border-indigo-200',
-      hoverColor: 'hover:border-indigo-400'
+      hoverColor: 'hover:border-indigo-400',
+      type: 'practice'
     },
     {
       id: 'listen-choice',
@@ -37,7 +40,8 @@ const LessonModeSelector = () => {
       color: 'from-blue-500 to-cyan-600',
       bgColor: 'bg-gradient-to-br from-blue-50 to-cyan-50',
       borderColor: 'border-blue-200',
-      hoverColor: 'hover:border-blue-400'
+      hoverColor: 'hover:border-blue-400',
+      type: 'practice'
     },
     {
       id: 'listen-write',
@@ -47,7 +51,8 @@ const LessonModeSelector = () => {
       color: 'from-green-500 to-emerald-600',
       bgColor: 'bg-gradient-to-br from-green-50 to-emerald-50',
       borderColor: 'border-green-200',
-      hoverColor: 'hover:border-green-400'
+      hoverColor: 'hover:border-green-400',
+      type: 'practice'
     },
     {
       id: 'listen-audio',
@@ -57,7 +62,44 @@ const LessonModeSelector = () => {
       color: 'from-pink-500 to-rose-600',
       bgColor: 'bg-gradient-to-br from-pink-50 to-rose-50',
       borderColor: 'border-pink-200',
-      hoverColor: 'hover:border-pink-400'
+      hoverColor: 'hover:border-pink-400',
+      type: 'practice'
+    }
+  ];
+
+  const testModes = [
+    {
+      id: 'cloze-test',
+      name: 'Điền từ',
+      description: 'Hoàn thành câu với từ vựng phù hợp',
+      icon: <PenTool className="w-6 h-6 sm:w-8 sm:h-8" />,
+      color: 'from-orange-500 to-amber-600',
+      bgColor: 'bg-gradient-to-br from-orange-50 to-amber-50',
+      borderColor: 'border-orange-200',
+      hoverColor: 'hover:border-orange-400',
+      type: 'test'
+    },
+    {
+      id: 'listening-test',
+      name: 'Nghe hiểu',
+      description: 'Nghe đoạn hội thoại và trả lời câu hỏi',
+      icon: <Headphones className="w-6 h-6 sm:w-8 sm:h-8" />,
+      color: 'from-teal-500 to-cyan-600',
+      bgColor: 'bg-gradient-to-br from-teal-50 to-cyan-50',
+      borderColor: 'border-teal-200',
+      hoverColor: 'hover:border-teal-400',
+      type: 'test'
+    },
+    {
+      id: 'pronunciation-test',
+      name: 'Phát âm',
+      description: 'Đọc từ và câu, kiểm tra phát âm',
+      icon: <Volume2 className="w-6 h-6 sm:w-8 sm:h-8" />,
+      color: 'from-red-500 to-rose-600',
+      bgColor: 'bg-gradient-to-br from-red-50 to-rose-50',
+      borderColor: 'border-red-200',
+      hoverColor: 'hover:border-red-400',
+      type: 'test'
     }
   ];
 
@@ -67,13 +109,16 @@ const LessonModeSelector = () => {
 
   const handleSelectMode = (mode) => {
     setSelectedMode(mode);
-    setShowFilterModal(true);
+    if (mode.type === 'practice') {
+      setShowPracticeModal(true);
+    } else {
+      setShowTestModal(true);
+    }
   };
 
-  const handleStartWithFilters = (filters) => {
+  const handleStartWithPracticeFilters = (filters) => {
     if (!selectedMode) return;
     
-    // Encode filters to pass as URL params
     const filterParams = new URLSearchParams({
       difficulty: filters.difficulty.join(','),
       streak: filters.streak,
@@ -82,7 +127,21 @@ const LessonModeSelector = () => {
       includeLearned: filters.includeLearned
     }).toString();
     
-    // Navigate to the learning mode with filters
+    navigate(`/${selectedMode.id}/${categoryId}/${lessonId}?${filterParams}`);
+  };
+
+  const handleStartWithTestFilters = (filters) => {
+    if (!selectedMode) return;
+    
+    const filterParams = new URLSearchParams({
+      difficulty: filters.difficulty.join(','),
+      streak: filters.streak,
+      wordLimit: filters.wordLimit,
+      questionCount: filters.questionCount,
+      includeUnlearned: filters.includeUnlearned,
+      includeLearned: filters.includeLearned
+    }).toString();
+    
     navigate(`/${selectedMode.id}/${categoryId}/${lessonId}?${filterParams}`);
   };
 
@@ -129,34 +188,66 @@ const LessonModeSelector = () => {
           </div>
         )}
 
-        {/* Learning Modes Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-8 max-w-4xl mx-auto">
-          {learningModes.map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => handleSelectMode(mode)}
-              className={`${mode.bgColor} rounded-lg sm:rounded-2xl p-4 sm:p-8 border-2 ${mode.borderColor} ${mode.hoverColor} transition-all duration-300 hover:shadow-xl hover:scale-105 group text-left`}
-            >
-              {/* Icon */}
-              <div className={`w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-br ${mode.color} rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-6 text-white group-hover:scale-110 transition-transform duration-300`}>
-                {mode.icon}
-              </div>
+        {/* Practice Section */}
+        <div className="mb-6 sm:mb-8 max-w-4xl mx-auto">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
+            Luyện tập
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {learningModes.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => handleSelectMode(mode)}
+                className={`${mode.bgColor} rounded-lg sm:rounded-xl p-3 sm:p-5 border-2 ${mode.borderColor} ${mode.hoverColor} transition-all duration-300 hover:shadow-lg hover:scale-105 group text-left`}
+              >
+                <div className={`w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br ${mode.color} rounded-lg flex items-center justify-center mb-2 sm:mb-3 text-white group-hover:scale-110 transition-transform duration-300`}>
+                  {mode.icon}
+                </div>
+                <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2">
+                  {mode.name}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 leading-relaxed">
+                  {mode.description}
+                </p>
+                <div className="flex items-center space-x-1 sm:space-x-2 text-purple-600 font-semibold group-hover:text-purple-700">
+                  <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm">Tùy chỉnh và bắt đầu</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
 
-              {/* Content */}
-              <h3 className="text-base sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-3">
-                {mode.name}
-              </h3>
-              <p className="text-xs sm:text-base text-gray-600 mb-3 sm:mb-6 leading-relaxed">
-                {mode.description}
-              </p>
-
-              {/* Action */}
-              <div className="flex items-center space-x-2 text-purple-600 font-semibold group-hover:text-purple-700">
-                <Play className="w-3 h-3 sm:w-5 sm:h-5" />
-                <span className="text-xs sm:text-base">Tùy chỉnh và bắt đầu</span>
-              </div>
-            </button>
-          ))}
+        {/* Test Section */}
+        <div className="mb-6 sm:mb-8 max-w-4xl mx-auto">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
+            <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-orange-600" />
+            Kiểm tra
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {testModes.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => handleSelectMode(mode)}
+                className={`${mode.bgColor} rounded-lg sm:rounded-xl p-3 sm:p-5 border-2 ${mode.borderColor} ${mode.hoverColor} transition-all duration-300 hover:shadow-lg hover:scale-105 group text-left`}
+              >
+                <div className={`w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br ${mode.color} rounded-lg flex items-center justify-center mb-2 sm:mb-3 text-white group-hover:scale-110 transition-transform duration-300`}>
+                  {mode.icon}
+                </div>
+                <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2">
+                  {mode.name}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 leading-relaxed">
+                  {mode.description}
+                </p>
+                <div className="flex items-center space-x-1 sm:space-x-2 text-orange-600 font-semibold group-hover:text-orange-700">
+                  <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm">Tùy chỉnh và bắt đầu</span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tips Section */}
@@ -174,25 +265,36 @@ const LessonModeSelector = () => {
               <span><strong>Nghe & Chọn:</strong> Rèn luyện kỹ năng nghe hiểu và phát âm</span>
             </p>
             <p className="flex items-start">
-              <span className="text-green-600 font-bold mr-2">•</span>
-              <span><strong>Nghe & Viết:</strong> Nâng cao kỹ năng chính tả và nghe</span>
+              <span className="text-orange-600 font-bold mr-2">•</span>
+              <span><strong>Điền từ:</strong> Kiểm tra khả năng sử dụng từ trong ngữ cảnh</span>
             </p>
             <p className="flex items-start">
-              <span className="text-pink-600 font-bold mr-2">•</span>
-              <span><strong>Chọn Audio:</strong> Phân biệt âm thanh và phát âm chính xác</span>
+              <span className="text-teal-600 font-bold mr-2">•</span>
+              <span><strong>Bài kiểm tra:</strong> Cho phép tùy chỉnh số câu hỏi và mức độ</span>
             </p>
           </div>
         </div>
       </main>
 
-      {/* Filter Modal */}
+      {/* Practice Filter Modal */}
       <LessonFilterModal
-        isOpen={showFilterModal}
+        isOpen={showPracticeModal}
         onClose={() => {
-          setShowFilterModal(false);
+          setShowPracticeModal(false);
           setSelectedMode(null);
         }}
-        onStartLesson={handleStartWithFilters}
+        onStartLesson={handleStartWithPracticeFilters}
+        totalWords={totalWords}
+      />
+
+      {/* Test Filter Modal */}
+      <TestFilterModal
+        isOpen={showTestModal}
+        onClose={() => {
+          setShowTestModal(false);
+          setSelectedMode(null);
+        }}
+        onStartTest={handleStartWithTestFilters}
         totalWords={totalWords}
       />
     </div>

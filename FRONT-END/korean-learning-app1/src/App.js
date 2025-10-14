@@ -4,6 +4,8 @@ import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { CategoryProvider } from "./context/CategoryContext";
 import { AuthProvider } from "./context/AuthContext";
+import { AIgenContextProvider } from './context/AIgen';
+import { LessonProvider } from './context/LessonContext';
 // import { AppProvider } from "./context/AppContext";
 // import { ProgressProvider } from "./context/ProgressContext";
 
@@ -21,6 +23,11 @@ import ListenAudioPage from "./pages/listenaudio";
 import CategoryPage from "./pages/category";
 import AddCategoryPage from "./pages/home/AddCategoryPage";
 
+
+// testing
+import ClozeTestScreen from "./pages/test/cloze";
+import ListeningTestScreen from "./pages/test/listening";
+import PronunciationTestScreen from "./pages/test/pronunciation";
 // Styles (Tailwind or CSS global)
 import "./styles/globals.css";
 
@@ -29,6 +36,7 @@ function App() {
   return (
     <AuthProvider>
       <CategoryProvider>
+        <AIgenContextProvider>
           <Router>
             <Routes>
               {/* Trang chủ */}
@@ -45,13 +53,16 @@ function App() {
               <Route path="/listen-choice/:categoryId/:lessonId" element={<ListenChoicePage />} />
               <Route path="/listen-write/:categoryId/:lessonId" element={<ListenWritePage />} />
               <Route path="/listen-audio/:categoryId/:lessonId" element={<ListenAudioPage />} />
-              
+              <Route path="/cloze-test/:categoryId/:lessonId" element={<ClozeTestScreen />} />
+              <Route path="/listening-test/:categoryId/:lessonId" element={<ListeningTestScreen />} />
+              <Route path="/pronunciation-test/:categoryId/:lessonId" element={<PronunciationTestScreen />} />
 
               <Route path="/category/:categoryId" element={<CategoryPage />} />
               <Route path="/category/:categoryId/*" element={<CategoryPage />} />
               <Route path="/add-category" element={<AddCategoryPage />} />
             </Routes>
           </Router>
+        </AIgenContextProvider>
       </CategoryProvider>
      </AuthProvider>
   );

@@ -5,29 +5,57 @@ import { getLessons, getLessonById, createLesson, updateLesson, deleteLesson } f
 const LessonContext = createContext();
 
 export const LessonProvider = ({ children }) => {
-    const [lessonsMap, setLessonsMap] = useState({});
-    const [loading, setLoading] = useState(true);
+    const [lessonsMap, setLessonsMap] = useState(() => {
+        // Khôi phục data từ localStorage nếu có
+        const cached = localStorage.getItem('lessonsMap');
+        return cached ? JSON.parse(cached) : {};
+    });
+    const [loading, setLoading] = useState(false);
+    const [activeCategories, setActiveCategories] = useState(new Set());
 
     const fetchLessonsForCategory = useCallback(async (categoryId) => {
         if (!categoryId) return;
+
+        // Kiểm tra nếu category đang được fetch
+        if (activeCategories.has(categoryId)) {
+            return;
+        }
+
+        // Kiểm tra cache
+        if (lessonsMap[categoryId]) {
+            setLoading(false);
+            return;
+        }
         
         try {
             setLoading(true);
+            setActiveCategories(prev => new Set(prev).add(categoryId));
+            
             const response = await getLessons(categoryId);
             if(response.status ===200) {
                 const lessonsData = Array.isArray(response.data) ? response.data : (response.data || []);
-                setLessonsMap(prev => ({
-                    ...prev,
-                    [categoryId]: lessonsData
-                }));
+                setLessonsMap(prev => {
+                    const newMap = {
+                        ...prev,
+                        [categoryId]: lessonsData
+                    };
+                    // Lưu vào localStorage
+                    localStorage.setItem('lessonsMap', JSON.stringify(newMap));
+                    return newMap;
+                });
                 console.log("Fetched lessons for category", categoryId, ":", lessonsData);
             }
         } catch (error) {
             console.error("Failed to fetch lessons:", error);
         } finally {
             setLoading(false);
+            setActiveCategories(prev => {
+                const next = new Set(prev);
+                next.delete(categoryId);
+                return next;
+            });
         }
-    }, []);
+    }, []); // Remove all dependencies since we're using closure values
 
     const getLessonsByCategory = (categoryId) => {
         if (!categoryId) return [];
@@ -101,11 +129,12 @@ export const useLessons = (categoryId) => {
         throw new Error('useLessons must be used within a LessonProvider');
     }
 
+    // Chỉ fetch khi không có data trong cache
     useEffect(() => {
-        if (categoryId) {
+        if (categoryId && !context.lessons[categoryId]) {
             context.fetchLessonsForCategory(categoryId);
         }
-    }, [categoryId, context?.fetchLessonsForCategory]);
+    }, [categoryId]); // Chỉ phụ thuộc vào categoryId
 
     return {
         lessons: context.getLessonsByCategory(categoryId),
